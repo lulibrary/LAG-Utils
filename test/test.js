@@ -8,4 +8,6 @@ describe('module tests', () => {
   it('should export an object', () => {
     Utils.should.be.an('object')
   })
+
+  it('should export a Topic object matching the one exported by topic.js')
 })
