@@ -56,7 +56,7 @@ describe('Topic class tests', () => {
   })
 
   describe('generate sns message method tests', () => {
-    it('should stringify a data object', () => {
+    it('should stringify an input object and return it in Message', () => {
       const testData = {
         message: "this is a message",
         array: [1,2,3,4,5],
@@ -70,6 +70,15 @@ describe('Topic class tests', () => {
 
       const testTopic = new Topic("a topic", 'eu-west-2');
       const result = testTopic.generateSnsMessage(testData);
+
+      result.Message.should.equal(testString)
+    })
+
+    it('should return an unaltered string in Message if the input is a string', () => {
+      const testString = "this is a test message"
+
+      const testTopic = new Topic("a topic", 'eu-west-2');
+      const result = testTopic.generateSnsMessage(testString);
 
       result.Message.should.equal(testString)
     })
