@@ -44,7 +44,7 @@ describe('Topic class tests', () => {
       });
     })
   
-    it('should throw an error if SNS publish fails', () => {
+    it('should be rejected with an error if SNS publish fails', () => {
       const publishStub = sinon.stub();
       publishStub.callsArgWith(1, new Error('Failed'), null)
       AWS_MOCK.mock('SNS', 'publish', publishStub);
