@@ -1,8 +1,8 @@
-const chai = require('chai');
-const should = chai.should();
+const chai = require('chai')
+chai.should()
 
 // Module under test
-const Utils = require('../src');
+const Utils = require('../src')
 
 // Test data
 const Topic = require('../src/topic')

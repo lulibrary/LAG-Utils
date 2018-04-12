@@ -1,3 +1,3 @@
 module.exports = {
-  Topic: require('./topic'),
+  Topic: require('./topic')
 }
