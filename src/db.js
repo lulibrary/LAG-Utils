@@ -7,14 +7,6 @@ class DB {
     this.tableName = tableName
   }
 
-  saveLoan (loanData) {
-    return this.save(loanData, this.loanCacheTable)
-  }
-
-  saveUser (userData) {
-    return this.save(userData, this.userCacheTable)
-  }
-
   save (data) {
     return new Promise((resolve, reject) => {
       this.docClient.put({
