@@ -84,7 +84,7 @@ describe('db class tests', () => {
       })
     })
 
-    it('should resolve with a loan record if a matching loan is found with no expiry date set', () => {
+    it('should resolve with a record if a matching one is found with no expiry date set', () => {
       const getResult = {
         Item: {
           loan_id: 'a loan'
@@ -98,7 +98,7 @@ describe('db class tests', () => {
         .and.should.eventually.deep.equal({loan_id: 'a loan'})
     })
 
-    it('should reject with an error if the loan\'s expiry date is in the past', () => {
+    it('should reject with an error if the expiry date is in the past', () => {
       const getResult = {
         Item: {
           loan_id: 'a loan',
@@ -113,7 +113,7 @@ describe('db class tests', () => {
         .and.should.eventually.be.an.instanceOf(Error)
     })
 
-    it('should resolve with a loan record if the expiry date is in the future', () => {
+    it('should resolve with a record if the expiry date is in the future', () => {
       const getResult = {
         Item: {
           loan_id: 'a loan',
@@ -128,7 +128,7 @@ describe('db class tests', () => {
         .and.should.eventually.deep.equal(getResult.Item)
     })
 
-    it('should be rejected with an error if no matching loan record is found', () => {
+    it('should be rejected with an error if no matching record is found', () => {
       const getResult = {}
 
       AWS_MOCK.mock('DynamoDB.DocumentClient', 'get', getResult)
