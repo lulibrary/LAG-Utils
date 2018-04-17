@@ -8,14 +8,12 @@ class DB {
   }
 
   save (data) {
-    return new Promise((resolve, reject) => {
-      this.docClient.put({
-        Item: data,
-        TableName: this.tableName
-      }, (err, data) => {
-        err ? reject(err) : resolve(data)
-      })
-    })
+    const params = {
+      Item: data,
+      TableName: this.tableName
+    }
+
+    return this.docClient.put(params).promise()
   }
 
   get (Key) {
@@ -47,11 +45,12 @@ class DB {
       Key
     }
 
-    return new Promise((resolve, reject) => {
-      this.docClient.delete(params, (err, data) => {
-        err ? reject(err) : resolve(data)
-      })
-    })
+    // return new Promise((resolve, reject) => {
+    //   this.docClient.delete(params, (err, data) => {
+    //     err ? reject(err) : resolve(data)
+    //   })
+    // })
+    return this.docClient.delete(params).promise()
   }
 }
 
