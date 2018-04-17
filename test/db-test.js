@@ -3,11 +3,11 @@ const sinon = require('sinon')
 
 // Test libraries
 const chai = require('chai')
-const chai_as_promised = require('chai-as-promised')
-chai.use(chai_as_promised)
-const sinon_chai = require('sinon-chai')
-chai.use(sinon_chai)
-const should = chai.should()
+const chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised)
+const sinonChai = require('sinon-chai')
+chai.use(sinonChai)
+chai.should()
 
 const sandbox = sinon.sandbox.create()
 
