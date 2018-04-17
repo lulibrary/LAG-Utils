@@ -4,7 +4,7 @@ const AWS = require('aws-sdk/global')
 const timestamp = require('./timestamp')
 
 class DB {
-  constructor (tableName, region = 'eu-west-2') {
+  constructor (tableName, region) {
     this.docClient = new AWS.DynamoDB.DocumentClient({ region })
     this.tableName = tableName
   }

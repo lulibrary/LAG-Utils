@@ -36,7 +36,7 @@ describe('db class tests', () => {
         TableName: 'UserCacheTable'
       }
 
-      const testDB = new DB('UserCacheTable')
+      const testDB = new DB('UserCacheTable', 'eu-west-2')
       return testDB.save({ user_id: 'a user' }).then(data => {
         putStub.should.be.calledWith(expected)
       })
@@ -47,7 +47,7 @@ describe('db class tests', () => {
       putStub.callsArgWith(1, new Error('DynamoDB put has failed'), null)
       AWS_MOCK.mock('DynamoDB.DocumentClient', 'put', putStub)
 
-      const testDB = new DB('UserCacheTable')
+      const testDB = new DB('UserCacheTable', 'eu-west-2')
       return testDB.save({ user_id: 'a user' })
         .should.eventually.be.rejectedWith('DynamoDB put has failed')
         .should.eventually.be.an.instanceOf(Error)
@@ -77,7 +77,7 @@ describe('db class tests', () => {
         TableName: 'LoanCacheTable'
       }
 
-      let testDB = new DB('LoanCacheTable')
+      let testDB = new DB('LoanCacheTable', 'eu-west-2')
 
       return testDB.get({ loan_id: 'a loan' }).then(data => {
         getStub.should.be.calledWith(expected)
@@ -92,7 +92,7 @@ describe('db class tests', () => {
       }
 
       AWS_MOCK.mock('DynamoDB.DocumentClient', 'get', getResult)
-      let testDB = new DB('LoanCacheTable')
+      let testDB = new DB('LoanCacheTable', 'eu-west-2')
 
       return testDB.get({ loan_id: 'a loan' }).should.eventually.be.fulfilled
         .and.should.eventually.deep.equal({loan_id: 'a loan'})
@@ -107,7 +107,7 @@ describe('db class tests', () => {
       }
 
       AWS_MOCK.mock('DynamoDB.DocumentClient', 'get', getResult)
-      let testDB = new DB('LoanCacheTable')
+      let testDB = new DB('LoanCacheTable', 'eu-west-2')
 
       return testDB.get({ loan_id: 'a loan' }).should.eventually.be.rejectedWith('No matching record found')
         .and.should.eventually.be.an.instanceOf(Error)
@@ -122,7 +122,7 @@ describe('db class tests', () => {
       }
 
       AWS_MOCK.mock('DynamoDB.DocumentClient', 'get', getResult)
-      let testDB = new DB('LoanCacheTable')
+      let testDB = new DB('LoanCacheTable', 'eu-west-2')
 
       return testDB.get({ loan_id: 'a loan' }).should.eventually.be.fulfilled
         .and.should.eventually.deep.equal(getResult.Item)
@@ -132,7 +132,7 @@ describe('db class tests', () => {
       const getResult = {}
 
       AWS_MOCK.mock('DynamoDB.DocumentClient', 'get', getResult)
-      let testDB = new DB('LoanCacheTable')
+      let testDB = new DB('LoanCacheTable', 'eu-west-2')
 
       return testDB.get({ loan_id: 'a loan' }).should.eventually.be.rejectedWith('No matching record found')
         .and.should.eventually.be.an.instanceOf(Error)
@@ -143,7 +143,7 @@ describe('db class tests', () => {
       getStub.callsArgWith(1, new Error('DynamoDB broke'), null)
       AWS_MOCK.mock('DynamoDB.DocumentClient', 'get', getStub)
 
-      let testDB = new DB('LoanCacheTable')
+      let testDB = new DB('LoanCacheTable', 'eu-west-2')
 
       return testDB.get({ loan_id: 'a loan' }).should.eventually.be.rejectedWith('DynamoDB broke')
         .and.should.eventually.be.an.instanceOf(Error)
@@ -164,7 +164,7 @@ describe('db class tests', () => {
         loan_id: 'a loan'
       }
 
-      const testDB = new DB('a loan cache table')
+      const testDB = new DB('a loan cache table', 'eu-west-2')
 
       return testDB.delete(Key).then(() => {
         deleteStub.should.have.been.calledWith({
@@ -181,7 +181,7 @@ describe('db class tests', () => {
       deleteStub.callsArgWith(1, null, true)
       AWS_MOCK.mock('DynamoDB.DocumentClient', 'delete', deleteStub)
 
-      const testDB = new DB()
+      const testDB = new DB('loanCacheTable', 'eu-west-2')
 
       return testDB.delete('success').should.eventually.be.fulfilled
     })
@@ -191,7 +191,7 @@ describe('db class tests', () => {
       deleteStub.callsArgWith(1, new Error('DynamoDB error'), null)
       AWS_MOCK.mock('DynamoDB.DocumentClient', 'delete', deleteStub)
 
-      const testDB = new DB()
+      const testDB = new DB('loanCacheTable', 'eu-west-2')
 
       return testDB.delete('error').should.eventually.be.rejectedWith('DynamoDB error')
     })
