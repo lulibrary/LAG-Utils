@@ -45,11 +45,6 @@ class DB {
       Key
     }
 
-    // return new Promise((resolve, reject) => {
-    //   this.docClient.delete(params, (err, data) => {
-    //     err ? reject(err) : resolve(data)
-    //   })
-    // })
     return this.docClient.delete(params).promise()
   }
 }
