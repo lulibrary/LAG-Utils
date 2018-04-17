@@ -1,4 +1,4 @@
-const DynamoDB = require('aws-sdk/clients/dynamodb')
+require('aws-sdk/clients/dynamodb')
 const AWS = require('aws-sdk/global')
 
 class DB {
@@ -26,17 +26,6 @@ class DB {
     })
   }
 
-  getLoan (loan_id) {
-    const params = {
-      TableName: this.loanCacheTable,
-      Key: {
-        loan_id
-      }
-    }
-
-    return this.get(params)
-  }
-
   get (Key) {
     const params = {
       TableName: this.tableName,
@@ -58,17 +47,6 @@ class DB {
         }
       })
     })
-  }
-
-  deleteLoan (loan_id) {
-    const params = {
-      TableName: this.loanCacheTable,
-      Key: {
-        loan_id
-      }
-    }
-
-    return this.delete(params)
   }
 
   delete (Key) {
