@@ -6,6 +6,7 @@ const Utils = require('../src')
 
 // Test data
 const Topic = require('../src/topic')
+const DB = require('../src/db')
 
 describe('module tests', () => {
   it('should export an object', () => {
@@ -14,5 +15,9 @@ describe('module tests', () => {
 
   it('should export a Topic object matching the one exported by topic.js', () => {
     Utils.Topic.should.deep.equal(Topic)
+  })
+
+  it('should export a DB object matching the one exported by db.js', () => {
+    Utils.DB.should.deep.equal(DB)
   })
 })
