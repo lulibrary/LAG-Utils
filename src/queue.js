@@ -1,4 +1,4 @@
-const SQS = require('aws-sdk/clients/sqs')
+require('aws-sdk/clients/sqs')
 const AWS = require('aws-sdk/global')
 
 class Queue {

@@ -2,9 +2,9 @@ const AWS_MOCK = require('aws-sdk-mock')
 const sinon = require('sinon')
 
 const chai = require('chai')
-const sinon_chai = require('sinon-chai')
-chai.use(sinon_chai)
-const should = chai.should()
+const sinonChai = require('sinon-chai')
+chai.use(sinonChai)
+chai.should()
 
 const sandbox = sinon.sandbox.create()
 
@@ -23,7 +23,7 @@ describe('queue class tests', () => {
       urlStub.callsArgWith(1, null, { QueueUrl: 'a url' })
       AWS_MOCK.mock('SQS', 'getQueueUrl', urlStub)
 
-      expected = {
+      const expected = {
         QueueName: 'a queue',
         QueueOwnerAWSAccountId: 'me'
       }
