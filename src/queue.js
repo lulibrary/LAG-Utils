@@ -9,11 +9,13 @@ class Queue {
   }
 
   getQueueUrl () {
+    const params = {
+      QueueName: this.name,
+      QueueOwnerAWSAccountId: this.owner
+    }
+
     return new Promise((resolve, reject) => {
-      this.sqs.getQueueUrl({
-        QueueName: this.name,
-        QueueOwnerAWSAccountId: this.owner
-      }, (err, data) => {
+      this.sqs.getQueueUrl(params, (err, data) => {
         if (err) {
           reject(err)
         } else {
@@ -31,11 +33,7 @@ class Queue {
         QueueUrl: this.url
       }
 
-      return new Promise((resolve, reject) => {
-        this.sqs.sendMessage(params, (err, data) => {
-          err ? reject(err) : resolve(data)
-        })
-      })
+      return this.sqs.sendMessage(params).promise()
     } else {
       throw new Error('Queue URL has not been set')
     }
