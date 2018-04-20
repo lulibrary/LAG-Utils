@@ -1,4 +1,5 @@
 module.exports = {
   Topic: require('./topic'),
-  DB: require('./db')
+  DB: require('./db'),
+  ItemNotFoundError: require('./item-not-found-error')
 }
