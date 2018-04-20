@@ -14,6 +14,8 @@ const sandbox = sinon.sandbox.create()
 // Module under test
 const DB = require('../src/db')
 
+const ItemNotFoundError = require('../src/item-not-found-error')
+
 describe('db class tests', () => {
   afterEach(() => {
     sandbox.restore()
@@ -135,7 +137,7 @@ describe('db class tests', () => {
       let testDB = new DB('LoanCacheTable', 'eu-west-2')
 
       return testDB.get({ loan_id: 'a loan' }).should.eventually.be.rejectedWith('No matching record found')
-        .and.should.eventually.be.an.instanceOf(Error)
+        .and.should.eventually.be.an.instanceOf(ItemNotFoundError)
     })
 
     it('should be rejected with an error if dynamodb fails', () => {
