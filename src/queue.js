@@ -28,12 +28,10 @@ class Queue {
 
   sendMessage (message) {
     if (this.url) {
-      const params = {
+      return this.sqs.sendMessage({
         MessageBody: message,
         QueueUrl: this.url
-      }
-
-      return this.sqs.sendMessage(params).promise()
+      }).promise()
     } else {
       throw new Error('Queue URL has not been set')
     }
