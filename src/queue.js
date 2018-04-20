@@ -25,16 +25,20 @@ class Queue {
   }
 
   sendMessage (message) {
-    const params = {
-      MessageBody: message,
-      QueueUrl: this.url
-    }
+    if (this.url) {
+      const params = {
+        MessageBody: message,
+        QueueUrl: this.url
+      }
 
-    return new Promise((resolve, reject) => {
-      this.sqs.sendMessage(params, (err, data) => {
-        err ? reject(err) : resolve(data)
+      return new Promise((resolve, reject) => {
+        this.sqs.sendMessage(params, (err, data) => {
+          err ? reject(err) : resolve(data)
+        })
       })
-    })
+    } else {
+      throw new Error('Queue URL has not been set')
+    }
   }
 }
 

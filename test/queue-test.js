@@ -5,6 +5,7 @@ const chai = require('chai')
 const sinonChai = require('sinon-chai')
 chai.use(sinonChai)
 chai.should()
+const expect = chai.expect
 
 const sandbox = sinon.sandbox.create()
 
@@ -105,6 +106,13 @@ describe('queue class tests', () => {
       return testQueue.sendMessage('this is a test message')
         .should.eventually.be.fulfilled
         .and.should.eventually.equal('message sent')
+    })
+
+    it('should throw an error if the Queue URL does not exist', () => {
+      const testQueue = new Queue('a queue', 'me')
+
+      expect(() => testQueue.sendMessage('this is a test message')).to.throw(Error)
+      expect(() => testQueue.sendMessage('this is a test message')).to.throw('Queue URL has not been set')
     })
   })
 })
