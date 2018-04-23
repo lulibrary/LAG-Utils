@@ -2,6 +2,7 @@ require('aws-sdk/clients/dynamodb')
 const AWS = require('aws-sdk/global')
 
 const timestamp = require('./timestamp')
+const ItemNotFoundError = require('./item-not-found-error')
 
 class DB {
   constructor (tableName, region) {
@@ -31,9 +32,9 @@ class DB {
         if (err) {
           reject(err)
         } else if (!data.Item) {
-          reject(new Error('No matching record found'))
+          reject(new ItemNotFoundError('No matching record found'))
         } else if (data.Item.expiry_date && data.Item.expiry_date < timeNow) {
-          reject(new Error('No matching record found'))
+          reject(new ItemNotFoundError('No matching record found'))
         } else {
           resolve(data.Item)
         }

@@ -7,6 +7,7 @@ const Utils = require('../src')
 // Test data
 const Topic = require('../src/topic')
 const DB = require('../src/db')
+const ItemNotFoundError = require('../src/item-not-found-error')
 
 describe('module tests', () => {
   it('should export an object', () => {
@@ -19,5 +20,9 @@ describe('module tests', () => {
 
   it('should export a DB object matching the one exported by db.js', () => {
     Utils.DB.should.deep.equal(DB)
+  })
+
+  it('should export an ItemNotFoundError object matching the one exported by item-not-found-error.js', () => {
+    Utils.ItemNotFoundError.should.deep.equal(ItemNotFoundError)
   })
 })
