@@ -121,5 +121,25 @@ describe('queue class tests', () => {
         getQueueUrlStub.should.have.been.calledOnce
       })
     })
+
+    it('should be rejected with a custom error if Queue#getQueueUrl is rejected', () => {
+      const testQueue = new Queue('a queue', 'me')
+      const getQueueUrlStub = sandbox.stub(testQueue, 'getQueueUrl')
+      getQueueUrlStub.rejects(new Error('an error from getQueueURL'))
+
+      return testQueue.sendMessage('this is a test message').should.eventually.be.rejectedWith('Unable to get Queue URL')
+    })
+
+    it('should be rejected with the SQS#sendMessage error if SQS#sendMessage is rejected', () => {
+      const testQueue = new Queue('a queue', 'me')
+      const getQueueUrlStub = sandbox.stub(testQueue, 'getQueueUrl')
+      getQueueUrlStub.resolves(true)
+      const sendMessageStub = sandbox.stub(testQueue.sqs, 'sendMessage')
+      sendMessageStub.returns({
+        promise: () => Promise.reject(new Error('an error from SQS#sendMessage'))
+      })
+
+      return testQueue.sendMessage('this is a test message').should.eventually.be.rejectedWith('an error from SQS#sendMessage')
+    })
   })
 })

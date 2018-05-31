@@ -27,7 +27,12 @@ class Queue {
   }
 
   sendMessage (message) {
-    return (this.url ? Promise.resolve() : this.getQueueUrl())
+    return (this.url
+      ? Promise.resolve()
+      : this.getQueueUrl()
+        .catch(e => {
+          throw new Error('Unable to get Queue URL')
+        }))
       .then(() => {
         return this.sqs.sendMessage({
           MessageBody: message,
