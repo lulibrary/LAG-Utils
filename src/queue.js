@@ -27,14 +27,13 @@ class Queue {
   }
 
   sendMessage (message) {
-    if (this.url) {
-      return this.sqs.sendMessage({
-        MessageBody: message,
-        QueueUrl: this.url
-      }).promise()
-    } else {
-      throw new Error('Queue URL has not been set')
-    }
+    return (this.url ? Promise.resolve() : this.getQueueUrl())
+      .then(() => {
+        return this.sqs.sendMessage({
+          MessageBody: message,
+          QueueUrl: this.url
+        }).promise()
+      })
   }
 }
 

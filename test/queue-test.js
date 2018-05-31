@@ -108,11 +108,18 @@ describe('queue class tests', () => {
         .and.should.eventually.equal('message sent')
     })
 
-    it('should throw an error if the Queue URL does not exist', () => {
+    it('should call getQueueUrl if the Queue URL does not exist', () => {
       const testQueue = new Queue('a queue', 'me')
+      const getQueueUrlStub = sandbox.stub(testQueue, 'getQueueUrl')
+      getQueueUrlStub.resolves(true)
+      const sendMessageStub = sandbox.stub(testQueue.sqs, 'sendMessage')
+      sendMessageStub.returns({
+        promise: () => Promise.resolve()
+      })
 
-      expect(() => testQueue.sendMessage('this is a test message')).to.throw(Error)
-      expect(() => testQueue.sendMessage('this is a test message')).to.throw('Queue URL has not been set')
+      return testQueue.sendMessage('this is a test message').then(() => {
+        getQueueUrlStub.should.have.been.calledOnce
+      })
     })
   })
 })
