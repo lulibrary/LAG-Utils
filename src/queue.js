@@ -2,9 +2,10 @@ require('aws-sdk/clients/sqs')
 const AWS = require('aws-sdk/global')
 
 class Queue {
-  constructor (name, owner) {
-    this.name = name
-    this.owner = owner
+  constructor (queueParms) {
+    this.name = queueParms.name
+    this.owner = queueParms.owner
+    this.url = queueParms.url
     this.sqs = new AWS.SQS()
   }
 
