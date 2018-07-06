@@ -379,4 +379,120 @@ describe('queue class tests', () => {
         })
     })
   })
+
+  describe('sendPending method tests', () => {
+    it('should call _callOnSQS with method "sendMessageBatch"', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const callOnStub = sandbox.stub(testQueue, '_callOnSQS')
+      callOnStub.resolves()
+
+      return testQueue.sendPending()
+        .then(() => {
+          callOnStub.should.have.been.calledWith('sendMessageBatch')
+        })
+    })
+
+    it('should call _callOnSQS with the pendingMessages', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testPending = [
+        { MessageBody: uuid() },
+        { MessageBody: uuid() },
+        { MessageBody: uuid() }
+      ]
+
+      testQueue.pendingMessages = testPending
+
+      const callOnStub = sandbox.stub(testQueue, '_callOnSQS')
+      callOnStub.resolves()
+
+      return testQueue.sendPending()
+        .then(() => {
+          callOnStub.should.have.been.calledWith('sendMessageBatch', {
+            Entries: testPending
+          })
+        })
+    })
+
+    it('should reset the pendingMessages if _callOnSQS resolves', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      testQueue.pendingMessages = [
+        { MessageBody: uuid() },
+        { MessageBody: uuid() },
+        { MessageBody: uuid() }
+      ]
+
+      const callOnStub = sandbox.stub(testQueue, '_callOnSQS')
+      callOnStub.resolves()
+
+      return testQueue.sendPending()
+        .then(() => {
+          testQueue.pendingMessages.should.deep.equal([])
+        })
+    })
+
+    it('should not reset the pendingMessages if _callOnSQS rejects', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testPending = [
+        { MessageBody: uuid() },
+        { MessageBody: uuid() },
+        { MessageBody: uuid() }
+      ]
+
+      testQueue.pendingMessages = testPending
+
+      const callOnStub = sandbox.stub(testQueue, '_callOnSQS')
+      callOnStub.rejects()
+
+      return testQueue.sendPending()
+        .catch(() => {
+          testQueue.pendingMessages.should.deep.equal(testPending)
+        })
+    })
+  })
+
+  describe('addPending method tests', () => {
+    it('should push the message onto the pendingMessages', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      testQueue.pendingMessages = []
+      testQueue.addPending(uuid())
+      testQueue.pendingMessages.length.should.equal(1)
+    })
+
+    it('should correctly format the message', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testMessage = uuid()
+
+      testQueue.pendingMessages = []
+      testQueue.addPending(testMessage)
+      testQueue.pendingMessages.should.deep.equal([
+        {
+          MessageBody: testMessage
+        }
+      ])
+    })
+  })
 })

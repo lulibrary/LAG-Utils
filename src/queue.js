@@ -9,6 +9,7 @@ class Queue {
     this.owner = queueParms.owner
     this.url = queueParms.url
     this.sqs = new AWS.SQS()
+    this.pendingMessages = []
   }
 
   getQueueUrl () {
@@ -26,6 +27,20 @@ class Queue {
 
   sendMessage (message) {
     return this._callOnSQS('sendMessage', { MessageBody: message })
+  }
+
+  sendPending () {
+    return this._callOnSQS('sendMessageBatch', { Entries: this.pendingMessages })
+      .then(res => {
+        this.pendingMessages = []
+        return res
+      })
+  }
+
+  addPending (message) {
+    this.pendingMessages.push({
+      MessageBody: message
+    })
   }
 
   receiveMessages (max = 10) {
