@@ -280,4 +280,77 @@ describe('queue class tests', () => {
         })
     })
   })
+
+  describe('_callOnSQS method tests', () => {
+    it('should call _ensureUrl', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const ensureUrlStub = sandbox.stub(testQueue, '_ensureUrl')
+      ensureUrlStub.resolves()
+
+      const testMethod = uuid()
+      const methodStub = sandbox.stub()
+      methodStub.returns({
+        promise: () => Promise.resolve()
+      })
+      testQueue.sqs[testMethod] = methodStub
+
+      return testQueue._callOnSQS(testMethod)
+        .then(() => {
+          ensureUrlStub.should.have.been.calledOnce
+        })
+    })
+
+    it('should call the provided method on SQS', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testMethod = uuid()
+      const methodStub = sandbox.stub()
+      methodStub.returns({
+        promise: () => Promise.resolve()
+      })
+      testQueue.sqs[testMethod] = methodStub
+
+      return testQueue._callOnSQS(testMethod)
+        .then(() => {
+          methodStub.should.have.been.calledOnce
+        })
+    })
+
+    it('should call the method with the passed parameters merged onto the URL parameter', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testMethod = uuid()
+      const methodStub = sandbox.stub()
+      methodStub.returns({
+        promise: () => Promise.resolve()
+      })
+      testQueue.sqs[testMethod] = methodStub
+
+      const testParams = {
+        thing1: uuid(),
+        thing2: uuid()
+      }
+
+      const expected = {
+        QueueUrl: testUrl,
+        thing1: testParams.thing1,
+        thing2: testParams.thing2
+      }
+
+      return testQueue._callOnSQS(testMethod, testParams)
+        .then(() => {
+          methodStub.should.have.been.calledWith(expected)
+        })
+    })
+  })
 })

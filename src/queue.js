@@ -1,6 +1,8 @@
 require('aws-sdk/clients/sqs')
 const AWS = require('aws-sdk/global')
 
+const _merge = require('lodash.merge')
+
 class Queue {
   constructor (queueParms) {
     this.name = queueParms.name
@@ -23,32 +25,21 @@ class Queue {
   }
 
   sendMessage (message) {
-    return this._ensureUrl()
-      .then(() => {
-        return this.sqs.sendMessage({
-          MessageBody: message,
-          QueueUrl: this.url
-        }).promise()
-      })
+    return this._callOnSQS('sendMessage', { MessageBody: message })
   }
 
   receiveMessages (max = 10) {
-    return this._ensureUrl()
-      .then(() => {
-        return this.sqs.receiveMessage({
-          QueueUrl: this.url,
-          MaxNumberOfMessages: max
-        }).promise()
-      })
+    return this._callOnSQS('receiveMessage', { MaxNumberOfMessages: max })
   }
 
   deleteMessage (receiptHandle) {
+    return this._callOnSQS('deleteMessage', { ReceiptHandle: receiptHandle })
+  }
+
+  _callOnSQS (method, params) {
     return this._ensureUrl()
       .then(() => {
-        return this.sqs.deleteMessage({
-          QueueUrl: this.url,
-          ReceiptHandle: receiptHandle
-        }).promise()
+        return this.sqs[method](_merge({ QueueUrl: this.url }, params)).promise()
       })
   }
 
