@@ -194,7 +194,7 @@ describe('queue class tests', () => {
       ensureUrlStub.resolves()
 
       sandbox.stub(testQueue.sqs, 'receiveMessage').returns({
-        promise: () => Promise.resolve()
+        promise: () => Promise.resolve({ Messages: null })
       })
 
       return testQueue.receiveMessages()
@@ -210,7 +210,7 @@ describe('queue class tests', () => {
       })
       const receiveMessageStub = sandbox.stub(testQueue.sqs, 'receiveMessage')
       receiveMessageStub.returns({
-        promise: () => Promise.resolve()
+        promise: () => Promise.resolve({ Messages: null })
       })
 
       const maxMessages = Math.round(Math.random() * 10)
@@ -231,7 +231,7 @@ describe('queue class tests', () => {
       })
       const receiveMessageStub = sandbox.stub(testQueue.sqs, 'receiveMessage')
       receiveMessageStub.returns({
-        promise: () => Promise.resolve()
+        promise: () => Promise.resolve({ Messages: null })
       })
       return testQueue.receiveMessages()
         .then(() => {
@@ -239,6 +239,32 @@ describe('queue class tests', () => {
             QueueUrl: testUrl,
             MaxNumberOfMessages: 10
           })
+        })
+    })
+
+    it('should return the Messages field of the response', () => {
+      const testResponse = {
+        Messages: [
+          uuid(),
+          uuid(),
+          {
+            name: uuid(),
+            body: uuid()
+          }
+        ]
+      }
+
+      AWS_MOCK.mock('SQS', 'receiveMessage', testResponse)
+      mocks.push('SQS')
+
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      return testQueue.receiveMessages()
+        .then(res => {
+          res.should.deep.equal(testResponse.Messages)
         })
     })
   })

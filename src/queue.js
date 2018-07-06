@@ -30,6 +30,7 @@ class Queue {
 
   receiveMessages (max = 10) {
     return this._callOnSQS('receiveMessage', { MaxNumberOfMessages: max })
+      .then(data => data.Messages)
   }
 
   deleteMessage (receiptHandle) {
