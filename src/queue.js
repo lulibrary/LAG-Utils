@@ -36,7 +36,7 @@ class Queue {
     return this._callOnSQS('deleteMessage', { ReceiptHandle: receiptHandle })
   }
 
-  _callOnSQS (method, params) {
+  _callOnSQS (method, params = {}) {
     return this._ensureUrl()
       .then(() => {
         return this.sqs[method](_merge({ QueueUrl: this.url }, params)).promise()
