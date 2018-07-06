@@ -23,7 +23,7 @@ class Queue {
   }
 
   sendMessage (message) {
-    return this._url()
+    return this._ensureUrl()
       .then(() => {
         return this.sqs.sendMessage({
           MessageBody: message,
@@ -32,7 +32,27 @@ class Queue {
       })
   }
 
-  _url () {
+  receiveMessages (max = 10) {
+    return this._ensureUrl()
+      .then(() => {
+        return this.sqs.receiveMessage({
+          QueueUrl: this.url,
+          MaxNumberOfMessages: max
+        }).promise()
+      })
+  }
+
+  deleteMessage (receiptHandle) {
+    return this._ensureUrl()
+      .then(() => {
+        return this.sqs.deleteMessage({
+          QueueUrl: this.url,
+          ReceiptHandle: receiptHandle
+        }).promise()
+      })
+  }
+
+  _ensureUrl () {
     return this.url
       ? Promise.resolve()
       : this.getQueueUrl()
