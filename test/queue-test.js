@@ -7,7 +7,11 @@ chai.use(sinonChai)
 chai.should()
 const expect = chai.expect
 
+const uuid = require('uuid/v4')
+
 const sandbox = sinon.sandbox.create()
+
+let mocks = []
 
 // Module under test
 const Queue = require('../src/queue')
@@ -15,7 +19,10 @@ const Queue = require('../src/queue')
 describe('queue class tests', () => {
   afterEach(() => {
     sandbox.restore()
-    AWS_MOCK.restore('SQS')
+    mocks.forEach(mock => {
+      AWS_MOCK.restore(mock)
+    })
+    mocks = []
   })
 
   describe('get queue url tests', () => {
@@ -23,6 +30,7 @@ describe('queue class tests', () => {
       const urlStub = sandbox.stub()
       urlStub.callsArgWith(1, null, { QueueUrl: 'a url' })
       AWS_MOCK.mock('SQS', 'getQueueUrl', urlStub)
+      mocks.push('SQS')
 
       const expected = {
         QueueName: 'a queue',
@@ -37,6 +45,7 @@ describe('queue class tests', () => {
 
     it('should update the queue object url', () => {
       AWS_MOCK.mock('SQS', 'getQueueUrl', { QueueUrl: 'a url' })
+      mocks.push('SQS')
 
       const testQueue = new Queue({ name: 'a queue', owner: 'me' })
       return testQueue.getQueueUrl().then(() => {
@@ -48,6 +57,7 @@ describe('queue class tests', () => {
       const urlStub = sandbox.stub()
       urlStub.callsArgWith(1, new Error('SQS has failed'), null)
       AWS_MOCK.mock('SQS', 'getQueueUrl', urlStub)
+      mocks.push('SQS')
 
       const testQueue = new Queue({ name: 'a queue', owner: 'me' })
       return testQueue.getQueueUrl().should.eventually.be.rejectedWith('SQS has failed')
@@ -58,6 +68,7 @@ describe('queue class tests', () => {
       const urlStub = sandbox.stub()
       urlStub.callsArgWith(1, null, { QueueUrl: 'a url' })
       AWS_MOCK.mock('SQS', 'getQueueUrl', urlStub)
+      mocks.push('SQS')
 
       const testQueue = new Queue({ name: 'a queue', owner: 'an owner' })
       return testQueue.getQueueUrl().should.eventually.be.fulfilled
@@ -69,6 +80,7 @@ describe('queue class tests', () => {
       const sendStub = sandbox.stub()
       sendStub.callsArgWith(1, null, true)
       AWS_MOCK.mock('SQS', 'sendMessage', sendStub)
+      mocks.push('SQS')
 
       const expected = {
         MessageBody: 'this is a test message',
@@ -86,6 +98,7 @@ describe('queue class tests', () => {
       const sendStub = sandbox.stub()
       sendStub.callsArgWith(1, new Error('SQS sendMessage has failed'), null)
       AWS_MOCK.mock('SQS', 'sendMessage', sendStub)
+      mocks.push('SQS')
 
       const testQueue = new Queue({ name: 'a queue', owner: 'an owner' })
       testQueue.url = 'a url'
@@ -99,6 +112,7 @@ describe('queue class tests', () => {
       const sendStub = sandbox.stub()
       sendStub.callsArgWith(1, null, 'message sent')
       AWS_MOCK.mock('SQS', 'sendMessage', sendStub)
+      mocks.push('SQS')
 
       const testQueue = new Queue({ name: 'a queue', owner: 'an owner' })
       testQueue.url = 'a url'
@@ -140,6 +154,345 @@ describe('queue class tests', () => {
       })
 
       return testQueue.sendMessage('this is a test message').should.eventually.be.rejectedWith('an error from SQS#sendMessage')
+    })
+  })
+
+  describe('_ensureUrl method tests', () => {
+    it('should call getQueueUrl if the Queue URL does not exist', () => {
+      const testQueue = new Queue({ name: 'a queue', owner: 'an owner' })
+      const getQueueUrlStub = sandbox.stub(testQueue, 'getQueueUrl')
+      getQueueUrlStub.resolves(true)
+
+      return testQueue._ensureUrl().then(() => {
+        getQueueUrlStub.should.have.been.calledOnce
+      })
+    })
+
+    it('should be rejected with a custom error if Queue#getQueueUrl is rejected', () => {
+      const testQueue = new Queue({ name: 'a queue', owner: 'an owner' })
+      const getQueueUrlStub = sandbox.stub(testQueue, 'getQueueUrl')
+      getQueueUrlStub.rejects(new Error('an error from getQueueURL'))
+
+      return testQueue._ensureUrl().should.eventually.be.rejectedWith('Unable to get Queue URL')
+    })
+
+    it('should resolve without calling getQueueUrl if the Queue URL exists', () => {
+      const testQueue = new Queue({ name: 'a queue', owner: 'an owner', url: uuid() })
+      const getQueueUrlStub = sandbox.stub(testQueue, 'getQueueUrl')
+      getQueueUrlStub.resolves(true)
+
+      return testQueue._ensureUrl().then(() => {
+        getQueueUrlStub.should.not.have.been.called
+      })
+    })
+  })
+
+  describe('receiveMessages method tests', () => {
+    it('should call _ensureUrl', () => {
+      const testQueue = new Queue({})
+      const ensureUrlStub = sandbox.stub(testQueue, '_ensureUrl')
+      ensureUrlStub.resolves()
+
+      sandbox.stub(testQueue.sqs, 'receiveMessage').returns({
+        promise: () => Promise.resolve({ Messages: null })
+      })
+
+      return testQueue.receiveMessages()
+        .then(() => {
+          ensureUrlStub.should.have.been.calledOnce
+        })
+    })
+
+    it('should call SQS#recieveMessage', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+      const receiveMessageStub = sandbox.stub(testQueue.sqs, 'receiveMessage')
+      receiveMessageStub.returns({
+        promise: () => Promise.resolve({ Messages: null })
+      })
+
+      const maxMessages = Math.round(Math.random() * 10)
+
+      return testQueue.receiveMessages(maxMessages)
+        .then(() => {
+          receiveMessageStub.should.have.been.calledWith({
+            QueueUrl: testUrl,
+            MaxNumberOfMessages: maxMessages
+          })
+        })
+    })
+
+    it('should default to a max of 10 messages', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+      const receiveMessageStub = sandbox.stub(testQueue.sqs, 'receiveMessage')
+      receiveMessageStub.returns({
+        promise: () => Promise.resolve({ Messages: null })
+      })
+      return testQueue.receiveMessages()
+        .then(() => {
+          receiveMessageStub.should.have.been.calledWith({
+            QueueUrl: testUrl,
+            MaxNumberOfMessages: 10
+          })
+        })
+    })
+
+    it('should return the Messages field of the response', () => {
+      const testResponse = {
+        Messages: [
+          uuid(),
+          uuid(),
+          {
+            name: uuid(),
+            body: uuid()
+          }
+        ]
+      }
+
+      AWS_MOCK.mock('SQS', 'receiveMessage', testResponse)
+      mocks.push('SQS')
+
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      return testQueue.receiveMessages()
+        .then(res => {
+          res.should.deep.equal(testResponse.Messages)
+        })
+    })
+  })
+
+  describe('deleteMessage method tests', () => {
+    it('should call _ensureUrl', () => {
+      const testQueue = new Queue({})
+      const ensureUrlStub = sandbox.stub(testQueue, '_ensureUrl')
+      ensureUrlStub.resolves()
+
+      sandbox.stub(testQueue.sqs, 'deleteMessage').returns({
+        promise: () => Promise.resolve()
+      })
+
+      return testQueue.deleteMessage()
+        .then(() => {
+          ensureUrlStub.should.have.been.calledOnce
+        })
+    })
+
+    it('should call SQS#deleteMessage', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+      const receiveMessageStub = sandbox.stub(testQueue.sqs, 'deleteMessage')
+      receiveMessageStub.returns({
+        promise: () => Promise.resolve()
+      })
+
+      const testReceiptHandle = uuid()
+
+      return testQueue.deleteMessage(testReceiptHandle)
+        .then(() => {
+          receiveMessageStub.should.have.been.calledWith({
+            QueueUrl: testUrl,
+            ReceiptHandle: testReceiptHandle
+          })
+        })
+    })
+  })
+
+  describe('_callOnSQS method tests', () => {
+    it('should call _ensureUrl', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const ensureUrlStub = sandbox.stub(testQueue, '_ensureUrl')
+      ensureUrlStub.resolves()
+
+      const testMethod = uuid()
+      const methodStub = sandbox.stub()
+      methodStub.returns({
+        promise: () => Promise.resolve()
+      })
+      testQueue.sqs[testMethod] = methodStub
+
+      return testQueue._callOnSQS(testMethod)
+        .then(() => {
+          ensureUrlStub.should.have.been.calledOnce
+        })
+    })
+
+    it('should call the provided method on SQS', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testMethod = uuid()
+      const methodStub = sandbox.stub()
+      methodStub.returns({
+        promise: () => Promise.resolve()
+      })
+      testQueue.sqs[testMethod] = methodStub
+
+      return testQueue._callOnSQS(testMethod)
+        .then(() => {
+          methodStub.should.have.been.calledOnce
+        })
+    })
+
+    it('should call the method with the passed parameters merged onto the URL parameter', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testMethod = uuid()
+      const methodStub = sandbox.stub()
+      methodStub.returns({
+        promise: () => Promise.resolve()
+      })
+      testQueue.sqs[testMethod] = methodStub
+
+      const testParams = {
+        thing1: uuid(),
+        thing2: uuid()
+      }
+
+      const expected = {
+        QueueUrl: testUrl,
+        thing1: testParams.thing1,
+        thing2: testParams.thing2
+      }
+
+      return testQueue._callOnSQS(testMethod, testParams)
+        .then(() => {
+          methodStub.should.have.been.calledWith(expected)
+        })
+    })
+  })
+
+  describe('sendPending method tests', () => {
+    it('should call _callOnSQS with method "sendMessageBatch"', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const callOnStub = sandbox.stub(testQueue, '_callOnSQS')
+      callOnStub.resolves()
+
+      return testQueue.sendPending()
+        .then(() => {
+          callOnStub.should.have.been.calledWith('sendMessageBatch')
+        })
+    })
+
+    it('should call _callOnSQS with the pendingMessages', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testPending = [
+        { MessageBody: uuid() },
+        { MessageBody: uuid() },
+        { MessageBody: uuid() }
+      ]
+
+      testQueue.pendingMessages = testPending
+
+      const callOnStub = sandbox.stub(testQueue, '_callOnSQS')
+      callOnStub.resolves()
+
+      return testQueue.sendPending()
+        .then(() => {
+          callOnStub.should.have.been.calledWith('sendMessageBatch', {
+            Entries: testPending
+          })
+        })
+    })
+
+    it('should reset the pendingMessages if _callOnSQS resolves', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      testQueue.pendingMessages = [
+        { MessageBody: uuid() },
+        { MessageBody: uuid() },
+        { MessageBody: uuid() }
+      ]
+
+      const callOnStub = sandbox.stub(testQueue, '_callOnSQS')
+      callOnStub.resolves()
+
+      return testQueue.sendPending()
+        .then(() => {
+          testQueue.pendingMessages.should.deep.equal([])
+        })
+    })
+
+    it('should not reset the pendingMessages if _callOnSQS rejects', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testPending = [
+        { MessageBody: uuid() },
+        { MessageBody: uuid() },
+        { MessageBody: uuid() }
+      ]
+
+      testQueue.pendingMessages = testPending
+
+      const callOnStub = sandbox.stub(testQueue, '_callOnSQS')
+      callOnStub.rejects()
+
+      return testQueue.sendPending()
+        .catch(() => {
+          testQueue.pendingMessages.should.deep.equal(testPending)
+        })
+    })
+  })
+
+  describe('addPending method tests', () => {
+    it('should push the message onto the pendingMessages', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      testQueue.pendingMessages = []
+      testQueue.addPending(uuid())
+      testQueue.pendingMessages.length.should.equal(1)
+    })
+
+    it('should correctly format the message', () => {
+      const testUrl = uuid()
+      const testQueue = new Queue({
+        url: testUrl
+      })
+
+      const testMessage = uuid()
+
+      testQueue.pendingMessages = []
+      testQueue.addPending(testMessage)
+      testQueue.pendingMessages.should.deep.equal([
+        {
+          MessageBody: testMessage
+        }
+      ])
     })
   })
 })

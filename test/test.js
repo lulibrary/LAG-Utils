@@ -6,6 +6,7 @@ const Utils = require('../src')
 
 // Test data
 const Topic = require('../src/topic')
+const Queue = require('../src/queue')
 const DB = require('../src/db')
 const ItemNotFoundError = require('../src/item-not-found-error')
 
@@ -16,6 +17,10 @@ describe('module tests', () => {
 
   it('should export a Topic object matching the one exported by topic.js', () => {
     Utils.Topic.should.deep.equal(Topic)
+  })
+
+  it('should export a Queue object matching the one exported by queue.js', () => {
+    Utils.Queue.should.deep.equal(Queue)
   })
 
   it('should export a DB object matching the one exported by db.js', () => {
